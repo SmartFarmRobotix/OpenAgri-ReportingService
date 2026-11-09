@@ -7,11 +7,13 @@ services:
       POSTGRES_DB: ${REPORTING_POSTGRES_DB}
       POSTGRES_PORT: ${REPORTING_POSTGRES_PORT}
       PGPORT: ${REPORTING_POSTGRES_PORT}
+    volumes:
+      - reportingdb_data:/var/lib/postgresql/data
     healthcheck:
       test: pg_isready -U ${REPORTING_POSTGRES_USER} -d ${REPORTING_POSTGRES_DB}
       start_period: 10s
       retries: 3
-      interval: 360s
+      interval: 5s
 
   backend:
     depends_on:
@@ -23,6 +25,12 @@ services:
       - ${REPORTING_SERVICE_PORT}:${REPORTING_SERVICE_PORT}
     volumes:
       - user_reports:/code/app/user_reports
+    healthcheck:
+      test: wget -q -O- --tries=1 http://127.0.0.1:${REPORTING_SERVICE_PORT}/ready || exit 1
+      start_period: 15s
+      interval: 30s
+      timeout: 5s
+      retries: 3
     environment:
       REPORTING_POSTGRES_HOST: ${REPORTING_POSTGRES_HOST}
       REPORTING_POSTGRES_USER: ${REPORTING_POSTGRES_USER}
@@ -38,6 +46,18 @@ services:
       REPORTING_GATEKEEPER_USERNAME: ${REPORTING_GATEKEEPER_USERNAME}
       REPORTING_GATEKEEPER_PASSWORD: ${REPORTING_GATEKEEPER_PASSWORD}
       REPORTING_BACKEND_CORS_ORIGINS: ${REPORTING_BACKEND_CORS_ORIGINS}
+      PDF_DIRECTORY: /code/app/user_reports/
+    networks:
+      default:
+      oa_gk_network:
+        aliases:
+          - reporting
 
 volumes:
   user_reports:
+  reportingdb_data:
+
+networks:
+  oa_gk_network:
+    name: openagri-gatekeeper_oa_network
+    external: true

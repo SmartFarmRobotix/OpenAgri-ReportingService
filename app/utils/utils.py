@@ -10,42 +10,9 @@ from core import settings
 from utils.json_handler import make_get_request
 from geopy.geocoders import Nominatim
 
+from utils.pest_session_pdf_core import EX, add_fonts  # noqa: F401
+
 logger = logging.Logger("utils")
-
-
-def add_fonts(pdf):
-    fonts_folder_path = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)), "fonts"
-    )
-
-    pdf.add_font(
-        "FreeSerif", "", os.path.join(fonts_folder_path, "FreeSerif.ttf"), uni=True
-    )
-    pdf.add_font(
-        "FreeSerif", "B", os.path.join(fonts_folder_path, "FreeSerifBold.ttf"), uni=True
-    )
-
-
-class EX(FPDF):
-    def header(self):
-        self.image(
-            "https://horizon-openagri.eu/wp-content/uploads/2023/12/Logo-Open-Agri-blue-1024x338.png",
-            w=40.0,
-            keep_aspect_ratio=True,
-            x=160,
-        )
-
-    def footer(self):
-        self.set_y(-15)
-        self.set_font("FreeSerif", "", 7)
-        acknowledgement_text = """
-            \tOpenAgri has received funding from the EU's Horizon Europe research and  innovation programme under Grant Agreement no. 101134083. This output reflects
-            only the author's view and the European Commission cannot be held responsible for any use that may be made of the information contained therein.
-        """
-        image_path = os.path.join(settings.PROJECT_ROOT, "assets", "eu.png")
-        self.image(image_path, x=self.x, y=self.y, w=20)
-        self.set_x(self.get_x()+10)
-        self.multi_cell(200, 2, acknowledgement_text, border=0, align="J")
 
 
 def decode_jwt_token(token: str) -> dict:
